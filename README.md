@@ -71,11 +71,11 @@ STATUS
     - Implement Controller to save data to database (going to with database-based aggregation) see package: CallRecordController.saveCallRecords() )
     - Implement logic to perform aggregation: (see function package)    
 - IN_PROGRESS
-  - Implement CallRecordService logic to call SQL queries in CallRecordRepository to fetch aggregated data
+  - Implement CallRecordService logic that calls SQL queries in CallRecordRepository to fetch aggregated data
 
 LESSON LEARNED
 - Implement aggregation programmatically (Java streaming API groupBy) 
-  - This was a mistake because while I'm most comfortable with the streaming API, I under-estimated how much time it would take to get it right for this usecase's corner edges (e.g. if peak crosses past midnight and one have to)
+  - This was a mistake because while I'm most comfortable with the streaming API, I under-estimated how much time it would take to get it right for this usecase's corner edges (e.g. if peak crosses past midnight and one have to make the call apply to both days)
   - See commented out code in CallRecordService (this attempt ate up all my time which is why I couldn't finish in time)
 - Implement aggregation via DB : Timeseries DB (e.g. Influx)
   - For a real-word use case this would be the ideal solution
