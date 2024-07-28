@@ -30,7 +30,7 @@ Task: Convert incoming data to outgoing schema
 }
 ```
 ## Algorithm
-- GET data from Hubspot API
+- GET data from CallRecord API
 - Aggregate the records by date  (select ... GROUP BY CAST(startTimestamp AS DATE) )
 - find timestamp that is peak for each day i.e. "peak_of_day" (Map - see entry schema below)
 ```
@@ -62,21 +62,21 @@ Task: Convert incoming data to outgoing schema
 
 STATUS
 - DONE: 
-    - Fetch data from Hubspot API
+    - Fetch data from CallRecord API
     - Create domain object (see api.model package: JSONCallRecord)
     - Implement Feign client (see api.client package: CallRecordClient)
     - ~~Implement Service to perform aggregation programmatically~~(Java Stream API)
       ~~Implement Service to perform aggregation programmatically~~(JsonPath or JsonATA API)
-    - Implement Controller to fetch data (see controller package: HubspotController.getCallRecords() )
-    - Implement Controller to save data to database (going to with database-based aggregation) see package: HubspotController.saveCallRecords() )
+    - Implement Controller to fetch data (see controller package: CallRecordController.getCallRecords() )
+    - Implement Controller to save data to database (going to with database-based aggregation) see package: CallRecordController.saveCallRecords() )
     - Implement logic to perform aggregation: (see function package)    
 - IN_PROGRESS
-  - Implement HubspotService logic to call SQL queries in HubspotRepository to fetch aggregated data
+  - Implement CallRecordService logic to call SQL queries in CallRecordRepository to fetch aggregated data
 
 LESSON LEARNED
 - Implement aggregation programmatically (Java streaming API groupBy) 
   - This was a mistake because while I'm most comfortable with the streaming API, I under-estimated how much time it would take to get it right for this usecase's corner edges (e.g. if peak crosses past midnight and one have to)
-  - See commented out code in HubspotService (this attempt ate up all my time which is why I couldn't finish in time)
+  - See commented out code in CallRecordService (this attempt ate up all my time which is why I couldn't finish in time)
 - Implement aggregation via DB : Timeseries DB (e.g. Influx)
   - For a real-word use case this would be the ideal solution
   - I spent some time researching the Influx query API and how easy it is to use. It can't be learned in 15-20 minutes so I eliminated it as an option (more time wasted)
