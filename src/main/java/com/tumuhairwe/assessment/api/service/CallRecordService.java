@@ -8,13 +8,21 @@ import com.tumuhairwe.assessment.api.model.CallRecordResult;
 import com.tumuhairwe.assessment.api.model.JPACallRecord;
 import com.tumuhairwe.assessment.api.model.JSONCallId;
 import com.tumuhairwe.assessment.api.model.JSONCallRecord;
+import com.tumuhairwe.assessment.repository.RecordRepositoryImpl;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.Query;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.ast.Call;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,8 +40,12 @@ public class CallRecordService {
     @Value("classpath:records.json")
     private File file;
 
+
     @Autowired
     private RecordRepository recordRepository;
+
+    @Autowired
+    private RecordRepositoryImpl repoImpl;
 
     public List<JPACallRecord> getTestCallRecords(){
         return client.getTestCallRecords(userKey).getCallRecords();
@@ -45,46 +57,44 @@ public class CallRecordService {
     }
 
     public List<JPACallRecord> doSave(JSONCallRecord record){
-        Set<JPACallRecord> records = record.getCallRecords()
-                .stream()
-                .map(r -> new ModelMapperFunction().apply(r))
-                .collect(Collectors.toSet());
-        return this.recordRepository.saveAll(records);
+        return repoImpl.doSave(record);
     }
 
-    //Status: Incomplete
-    public List<CallRecordResult> getAnswer(){
-        List<Map<String, Object>> results = this.recordRepository.getCount();
-
-        List<CallRecordResult> answers = new ArrayList<>();
-        for (Map<String, Object> result : results){
-            int count = Integer.parseInt(result.get("count_by_date").toString());
-            int customerId = Integer.parseInt(result.get("customer_id").toString());
-            String callId = result.get("call_id").toString();
-            ZonedDateTime start_timestamp = ZonedDateTime.parse(result.get("start_timestamp").toString());
-            ZonedDateTime end_timestamp = ZonedDateTime.parse(result.get("end_timestamp").toString());
-
-            // this would be problematic if start <= midnight && end > midnight (i.e. peak is over night)
-            LocalDate peakDate = start_timestamp.toLocalDate();
-            int hourOfStart = start_timestamp.getHour();
-            int hourOfEnd = end_timestamp.getHour();
-            Integer peak = 0;
-
-//            if(!(hourOfStart < midnight && hourOfEnd > midnight)){
-//                peak = recordRepository.getPeakCountByCustomerAndDate(customerId, start_timestamp.toLocalDateTime(), end_timestamp.toLocalDateTime());
-//            }
-
-            CallRecordResult a = new CallRecordResult();
-            a.setCustomerId(customerId);
-            a.setMaxConcurrentCalls(count);
-            //a.setMaxConcurrentCalls(peak);
-            a.setDate(start_timestamp.toLocalDate());
-            a.getCallIds().add(callId);
-
-            answers.add(a);
-        }
-        return answers;
+    public List<CallRecordResult> getResults() throws SQLException, IOException {
+        return repoImpl.getRecords();
     }
+//    public List<CallRecordResult> getAnswer(){
+//        List<Map<String, Object>> results = this.recordRepository.getCount();
+//
+//        List<CallRecordResult> answers = new ArrayList<>();
+//        for (Map<String, Object> result : results){
+//            int count = Integer.parseInt(result.get("count_by_date").toString());
+//            int customerId = Integer.parseInt(result.get("customer_id").toString());
+//            String callId = result.get("call_id").toString();
+//            ZonedDateTime start_timestamp = ZonedDateTime.parse(result.get("start_timestamp").toString());
+//            ZonedDateTime end_timestamp = ZonedDateTime.parse(result.get("end_timestamp").toString());
+//
+//            // this would be problematic if start <= midnight && end > midnight (i.e. peak is over night)
+//            LocalDate peakDate = start_timestamp.toLocalDate();
+//            int hourOfStart = start_timestamp.getHour();
+//            int hourOfEnd = end_timestamp.getHour();
+//            Integer peak = 0;
+//
+////            if(!(hourOfStart < midnight && hourOfEnd > midnight)){
+////                peak = recordRepository.getPeakCountByCustomerAndDate(customerId, start_timestamp.toLocalDateTime(), end_timestamp.toLocalDateTime());
+////            }
+//
+//            CallRecordResult a = new CallRecordResult();
+//            a.setCustomerId(customerId);
+//            a.setMaxConcurrentCalls(count);
+//            //a.setMaxConcurrentCalls(peak);
+//            //a.setDate(start_timestamp.toLocalDate());
+//            a.getCallIds().add(callId);
+//
+//            answers.add(a);
+//        }
+//        return answers;
+//    }
 
 
 
